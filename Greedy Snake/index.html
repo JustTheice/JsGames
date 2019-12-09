@@ -7,15 +7,18 @@
 		<style type="text/css">
 			#wrap {
 				position: relative;
+				width: 500px;
+				margin: 0 auto;
 			}
 			#canvas{
 				margin: 0 auto;
 				background: lightgreen;
 				display: block;
 			}
-			.mask {
-				background: #000;
-				opacity: .5;
+			.mask,.mask2 {
+				/* background: #000; */
+				/* opacity: .5; */
+				background-color: rgba(0,0,0,.5);
 				width: 500px;
 				transition: .5s;
 				height: 500px;
@@ -23,12 +26,15 @@
 				left: 50%;
 				transform: translateX(-50%);
 			}
+			.mask{
+				z-index: 10;
+			}
 			.mask a{
 				border: none;
 				display: block;
 				width: 250px;
 				height: 100px;
-				position: relative;
+				position: absolute;
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%,-50%);
@@ -38,6 +44,64 @@
 				cursor: pointer;
 			}
 			.mask a:hover{
+				background-position: -100% 0;
+			}
+			.mask #snack{
+				background: url(imgs/snack.png);
+				margin: 5px auto;
+				width: 150px;
+				height: 187.5px;
+				background-size: 100% 100%;
+			}
+			
+			.mask .rules {
+				margin-top: 75px;
+				padding: 75px;
+			}
+			.mask .rules p{
+				font-family: "楷体";
+				font-size: 20px;
+				color: white;
+			}
+			.mask2{
+				text-align: center;
+				opacity: 0;
+			}
+			.mask2 .description{
+				color: white;
+				font-family: "楷体";
+				margin-top: 100px;
+				margin-bottom: 10px;
+				font-size: 25px;
+			}
+			.mask2 .score {
+				margin-top: 35px
+			}
+			.mask2 .score p:nth-child(1){
+				font-size: 25px;
+				color: orange;
+			}
+			.mask2 .score p:nth-child(2){
+				font-size: 30px;
+				color: white;
+			}
+			.mask2 .game-control{
+				margin-top: 10px;
+			}
+			.mask2 .game-control a{
+				display: inline-block;
+				width: 100px;
+				height: 100px;
+				background-size: 100% 100%;
+				margin: 10px;
+			}
+			.mask2 .game-control a:nth-child(1){
+				background: url(imgs/start.png);
+			}
+			.mask2 .game-control a:nth-child(2){
+				background: url(imgs/restart.png);
+			}
+			.mask2 .game-control a:hover{
 				background-position: -100% 0;
 			}
 			#controls{
@@ -69,13 +133,47 @@
 			#controls div:nth-child(4){
 				transform: translate(100%, 0);
 			}
+			#pause{
+				width: 50px;
+				height: 50px;
+				display: none;
+				position: absolute;
+				z-index: 20;
+				top: 0;
+				right: 0;
+				opacity: .5;
+				background: url(imgs/pause.png);
+				background-size: 200% 100%;
+			}
 		</style>
 	</head>
 	<body>
 		<div id="wrap">
 			<div class="mask">
+				<div class="top">
+					<div id="snack"></div>
+				</div>
 				<a href="javascript:;"></a>
+				<div class="rules">
+					<p><span style="color: red;">红色</span>蛇头，
+							<span style="color: royalblue;">蓝色</span>蛇身，
+							<span style="color: orange;">橙色</span>食物
+					</p>
+					<p>游戏玩法与传统贪吃蛇相同，吃掉更多食物成长为远古巨蟒</p>
+				</div>
 			</div>
+			<div class="mask2">
+				<p class="description">扶你起来，还能再战300回合</p>
+				<div class="score">
+					<p>最高分：<span>0</span></p>
+					<p>当前得分：<span>0</span></p>
+				</div>
+				<div class="game-control">
+					<a href="javascript:;" class="continue"></a>
+					<a href="javascript:;" class="restart"></a>
+				</div>
+			</div>
+			<a href="javascript:;" id="pause"></a>
 			<canvas id="canvas" width="500" height="500"></canvas>
 			<div id="controls">
 				<div>上</div>
@@ -86,10 +184,22 @@
 		</div>
 		<script type="text/javascript">
 			window.onload = function(){
+				let storageUtil = {
+					read(KEY){
+						return JSON.parse(window.localStorage.getItem(KEY) || '[]');
+					},
+					save(KEY,newV){
+						window.localStorage.setItem(KEY,JSON.stringify(newV));
+					}
+				}
 				//点击开始按钮隐藏遮罩框并开始游戏
 				let startBtn = document.querySelector('.mask>a');
 				let canvas = document.getElementById('canvas');
 				let mask = document.querySelector('.mask');
+				let pauseBtn = document.getElementById('pause');
+				let mask2 = document.querySelector('.mask2');
+				let continueBtn = document.querySelector('.game-control .continue');
+				let restartBtn = document.querySelector('.game-control .restart');
 				let snackPoints = [{x:3, y:0}, {x:2, y:0}, {x:1, y:0}]; //记录所有组成蛇的方块的坐标系数
 				let foodPoint = {x:Math.floor(Math.random()*19), y:Math.floor(Math.random()*19)}; //食物坐标
 				let long = 24;
@@ -97,10 +207,18 @@
 						preDir = dir;
 				let timer;
 				let isPlaying = false;
+				if(!storageUtil.read('GreedySnakeInfo').highestScore){
+					storageUtil.save('GreedySnakeInfo', {highestScore:0});
+				}
+				let currentScore = 0,
+						highestScore = storageUtil.read('GreedySnakeInfo').highestScore;  //记录分数
+				
+				
+				//开始游戏
 				startBtn.onclick = function(){
 					//样式交互
 					this.style.display = 'none';
-					
+					pauseBtn.style.display = 'block';
 					mask.style.opacity = 0;
 					let fn;
 					mask.addEventListener('transitionend', fn = function(){
@@ -110,72 +228,45 @@
 					
 					isPlaying = true;
 					
-					//开启定时器,让蛇动起来
-					timer = setInterval(() => {
-						//根据方向更新蛇的坐标
-						let newPoint = {x:snackPoints[0].x, y:snackPoints[0].y};
-						switch (dir){
-							case 0:
-								newPoint.y--;
-								break;
-							case 1:
-								newPoint.y++;
-								break;
-							case 2:
-								newPoint.x--;
-								break;
-							case 3:
-								newPoint.x++;
-								break;
-						}
-						//判断边界
-						if(newPoint.x<0 || newPoint.x>19 || newPoint.y<0 || newPoint.y>19){
-							alert('你被撞死了，GG');
-							clearInterval(timer);
-							return;
-						}
-						//判断是否撞到自己
-						snackPoints.forEach((point, item) => {
-							if(newPoint.x===point.x && newPoint.y===point.y){
-								alert('你把自己咬死了，智障！');
-								clearInterval(timer);
-								return;
-							}
-						});
-						//判断是否吃了食物
-						if(newPoint.x===foodPoint.x && newPoint.y===foodPoint.y){
-							//随机更新食物坐标
-							foodPoint.x = Math.floor(Math.random()*19);
-							foodPoint.y = Math.floor(Math.random()*19);
-						}else{
-							snackPoints.pop();
-						}
-						
-						snackPoints.unshift(newPoint);
-						
-						//清除重绘
-						ctx.clearRect(0,0, canvas.clientWidth,canvas.clientHeight);
-						createAll();
-						preDir = dir;
-					}, 1000/3);
-			
 					//绑定按键监听
-					document.addEventListener('keydown', function(ev){
-						if(!isPlaying){
-							return;
-						}
-						ev.preventDefault();
-						switch (ev.keyCode){
-							case 37: dir = preDir===3 ? 3 : 2;break;
-							case 38: dir = preDir===1 ? 1 : 0;break;
-							case 39: dir = preDir===2 ? 2 : 3;break;
-							case 40: dir = preDir===0 ? 0 : 1;break;
-							default: break;
-						}
-					})
+					document.addEventListener('keydown', keyPress);
+					
+					//游戏走起
+					walk();
 				};
 				
+				//暂停游戏
+				pauseBtn.onclick = function(){
+					clearInterval(timer);
+					showStateMask('扶你起来，还能再战300回合', true);
+					document.removeEventListener('keydown', keyPress);
+				};
 				
+				//继续游戏
+				continueBtn.onclick = function(){
+					pauseBtn.style.display = 'block';
+					mask2.style.opacity = '0';
+					document.addEventListener('keydown', keyPress);
+					walk();
+				}
+				
+				//重新开始
+				restartBtn.onclick = function(){
+					mask2.style.opacity = 0;
+					pauseBtn.style.display = 'block';
+					//重置蛇的所有坐标系数 方向
+					snackPoints = [{x:3, y:0},{x:2, y:0},{x:1, y:0}];
+					dir = 3;
+					//重置分数
+					currentScore = 0;
+					//重新初始化
+					document.addEventListener('keydown', keyPress);
+					ctx.clearRect(0,0, canvas.clientWidth,canvas.clientHeight);
+					createAll();
+					walk();
+				};
+				
+				//初始化
 				if(canvas.getContext){
 					var ctx = canvas.getContext('2d');
 					ctx.save();
@@ -184,7 +275,6 @@
 					//初始化游戏网格,食物,蛇身, 详见下方函数定义
 					createAll();
 				}
-				
 				
 			
 				
@@ -245,10 +335,127 @@
 				 * 				text: 要显示的文本
 				 * 				canContinue: 是否可以继续
 				 */
-				function showMask(text, canContinue){
-					mask.style.display = 'block';
-					mask.style.opacity = 1;
+				function showStateMask(text, canContinue){
+					mask2.querySelector('.score>p:nth-child(1)>span').innerHTML = highestScore;
+					mask2.querySelector('.score>p:nth-child(2)>span').innerHTML = currentScore;
+					mask2.style.opacity = 1;
+					mask2.querySelector('.description').innerHTML = text;
+					pauseBtn.style.display = 'none';
+					if(canContinue){
+						continueBtn.style.display = 'inline-block';
+					}else{
+						continueBtn.style.display = 'none';
+					}
 				}
+				
+				/**
+				 * 		按键响应
+				 */
+				function keyPress(ev){
+					if(!isPlaying){
+						return;
+					}
+					ev.preventDefault();
+					switch (ev.keyCode){
+						case 37: dir = preDir===3 ? 3 : 2;break;
+						case 38: dir = preDir===1 ? 1 : 0;break;
+						case 39: dir = preDir===2 ? 2 : 3;break;
+						case 40: dir = preDir===0 ? 0 : 1;break;
+						default: break;
+					}
+				}
+				
+				/**
+				 * 		运行游戏
+				 */
+				function walk(){
+					//开启定时器,让蛇动起来
+					timer = setInterval(() => {
+						//根据方向更新蛇的坐标
+						let newPoint = {x:snackPoints[0].x, y:snackPoints[0].y};
+						switch (dir){
+							case 0:
+								newPoint.y--;
+								break;
+							case 1:
+								newPoint.y++;
+								break;
+							case 2:
+								newPoint.x--;
+								break;
+							case 3:
+								newPoint.x++;
+								break;
+						}
+						
+						//判断是否吃了食物
+						if(newPoint.x===foodPoint.x && newPoint.y===foodPoint.y){
+							
+							//随机更新食物坐标
+							while(true){
+								let canBreak = true;
+								foodPoint.x = Math.floor(Math.random()*19);
+								foodPoint.y = Math.floor(Math.random()*19);
+								
+								if(foodPoint.x===newPoint.x && foodPoint.y===newPoint.y){
+									continue;
+								}
+								snackPoints.forEach((point, index) => {
+									if(foodPoint.x===point.x && foodPoint.y===point.y){
+										canBreak = false;
+										return;
+									}
+								});
+								if(canBreak){
+									break;
+								}
+							}
+							//更新分数
+							currentScore+=5;
+							if(currentScore > highestScore){
+								highestScore = currentScore;
+							}
+						}else{
+							snackPoints.pop();
+						}
+						
+						//判断边界
+						if(newPoint.x<0 || newPoint.x>19 || newPoint.y<0 || newPoint.y>19){
+							showStateMask('你一头撞在墙上，嗝屁了。', false);
+							clearInterval(timer);
+							document.removeEventListener('keydown', keyPress);
+							if(highestScore>storageUtil.read('GreedySnakeInfo').highestScore){
+								storageUtil.save('GreedySnakeInfo', {highestScore});
+							}
+							return;
+						}
+						//判断是否撞到自己
+						snackPoints.forEach((point, item) => {
+							if(newPoint.x===point.x && newPoint.y===point.y){
+								showStateMask('你把自己咬死了，智障！', false);
+								clearInterval(timer);
+								document.removeEventListener('keydown', keyPress);
+								if(highestScore>storageUtil.read('GreedySnakeInfo').highestScore){
+									storageUtil.save('GreedySnakeInfo', {highestScore});
+								}
+								return;
+							}
+						});
+						
+						snackPoints.unshift(newPoint);
+						
+						//清除重绘
+						ctx.clearRect(0,0, canvas.clientWidth,canvas.clientHeight);
+						createAll();
+						preDir = dir;
+					}, 1000/3);
+					
+				}
+			
+				/**
+				 * 		封装storage存储
+				 */
+				
 			};
 		</script>
 	</body>
