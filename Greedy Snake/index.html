@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="reset.css"/>
+		<style type="text/css">
+			#wrap {
+				position: relative;
+			}
+			#canvas{
+				margin: 0 auto;
+				background: lightgreen;
+				display: block;
+			}
+			.mask {
+				background: #000;
+				opacity: .5;
+				width: 500px;
+				transition: .5s;
+				height: 500px;
+				position: absolute;
+				left: 50%;
+				transform: translateX(-50%);
+			}
+			.mask a{
+				border: none;
+				display: block;
+				width: 250px;
+				height: 100px;
+				position: relative;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%,-50%);
+				background: url(imgs/start-btn.png);
+				background-size: 200% 100%;
+				opacity: 1;
+				cursor: pointer;
+			}
+			.mask a:hover{
+				background-position: -100% 0;
+			}
+			#controls{
+				width: 300px;
+				height: 300px;
+				margin: 20px auto 0;
+				position: relative;
+			}
+			#controls div{
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				margin-top: -50px;
+				margin-left: -50px;
+				width: 100px;
+				height: 100px;
+				background: skyblue;
+				cursor: pointer;
+			}
+			#controls div:nth-child(1){
+				transform: translate(0, -100%);
+			}
+			#controls div:nth-child(2){
+				transform: translate(0, 100%);
+			}
+			#controls div:nth-child(3){
+				transform: translate(-100%, 0);
+			}
+			#controls div:nth-child(4){
+				transform: translate(100%, 0);
+			}
+		</style>
+	</head>
+	<body>
+		<div id="wrap">
+			<div class="mask">
+				<a href="javascript:;"></a>
+			</div>
+			<canvas id="canvas" width="500" height="500"></canvas>
+			<div id="controls">
+				<div>上</div>
+				<div>下</div>
+				<div>左</div>
+				<div>右</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			window.onload = function(){
+				//点击开始按钮隐藏遮罩框并开始游戏
+				let startBtn = document.querySelector('.mask>a');
+				let canvas = document.getElementById('canvas');
+				let mask = document.querySelector('.mask');
+				let snackPoints = [{x:3, y:0}, {x:2, y:0}, {x:1, y:0}]; //记录所有组成蛇的方块的坐标系数
+				let foodPoint = {x:Math.floor(Math.random()*19), y:Math.floor(Math.random()*19)}; //食物坐标
+				let long = 24;
+				let dir = 3, //表示蛇的运动方向 值: 0 1 2 3,  分别表示上下左右
+						preDir = dir;
+				let timer;
+				let isPlaying = false;
+				startBtn.onclick = function(){
+					//样式交互
+					this.style.display = 'none';
+					
+					mask.style.opacity = 0;
+					let fn;
+					mask.addEventListener('transitionend', fn = function(){
+						this.style.display = 'none';
+						this.removeEventListener('transitionend', fn);
+					});
+					
+					isPlaying = true;
+					
+					//开启定时器,让蛇动起来
+					timer = setInterval(() => {
+						//根据方向更新蛇的坐标
+						let newPoint = {x:snackPoints[0].x, y:snackPoints[0].y};
+						switch (dir){
+							case 0:
+								newPoint.y--;
+								break;
+							case 1:
+								newPoint.y++;
+								break;
+							case 2:
+								newPoint.x--;
+								break;
+							case 3:
+								newPoint.x++;
+								break;
+						}
+						//判断边界
+						if(newPoint.x<0 || newPoint.x>19 || newPoint.y<0 || newPoint.y>19){
+							alert('你被撞死了，GG');
+							clearInterval(timer);
+							return;
+						}
+						//判断是否撞到自己
+						snackPoints.forEach((point, item) => {
+							if(newPoint.x===point.x && newPoint.y===point.y){
+								alert('你把自己咬死了，智障！');
+								clearInterval(timer);
+								return;
+							}
+						});
+						//判断是否吃了食物
+						if(newPoint.x===foodPoint.x && newPoint.y===foodPoint.y){
+							//随机更新食物坐标
+							foodPoint.x = Math.floor(Math.random()*19);
+							foodPoint.y = Math.floor(Math.random()*19);
+						}else{
+							snackPoints.pop();
+						}
+						
+						snackPoints.unshift(newPoint);
+						
+						//清除重绘
+						ctx.clearRect(0,0, canvas.clientWidth,canvas.clientHeight);
+						createAll();
+						preDir = dir;
+					}, 1000/3);
+			
+					//绑定按键监听
+					document.addEventListener('keydown', function(ev){
+						if(!isPlaying){
+							return;
+						}
+						ev.preventDefault();
+						switch (ev.keyCode){
+							case 37: dir = preDir===3 ? 3 : 2;break;
+							case 38: dir = preDir===1 ? 1 : 0;break;
+							case 39: dir = preDir===2 ? 2 : 3;break;
+							case 40: dir = preDir===0 ? 0 : 1;break;
+							default: break;
+						}
+					})
+				};
+				
+				
+				if(canvas.getContext){
+					var ctx = canvas.getContext('2d');
+					ctx.save();
+					ctx.strokeStyle = '#FFFFFF';
+					
+					//初始化游戏网格,食物,蛇身, 详见下方函数定义
+					createAll();
+				}
+				
+				
+			
+				
+				/**
+				 * 		生成一个颜色块
+				 * 			参数：
+				 * 				color: 颜色值,
+				 * 				startPoint: 起始点 如{x:..., y:...}
+				 */
+				function createSquare(color, {x,y}){
+					ctx.save();
+					ctx.fillStyle = color;
+					ctx.fillRect(x*25+0.5,y*25+0.5, long,long);
+					ctx.restore();
+				}
+				
+				/**
+				 * 		根据snackPoints中的坐标生成贪食蛇
+				 */
+				function createSnack(){
+					let color;
+					snackPoints.forEach((point, index) => {
+						color = index===0 ? 'red' : 'royalblue';
+						createSquare(color, point);
+					});
+				}
+				
+				/**
+				 * 		生成游戏网格
+				 */
+				function createGrid(){
+					for(let i=0;i<20;i++){
+						//画竖线
+						ctx.beginPath();
+						ctx.moveTo(i*25+0.5, 0);
+						ctx.lineTo(i*25+0.5, 500);
+						ctx.stroke();
+						//画横线
+						ctx.beginPath();
+						ctx.moveTo(0, i*25+0.5);
+						ctx.lineTo(500, i*25+0.5);
+						ctx.stroke();
+					}
+				}
+				
+				/**
+				 * 		生成所有相关内容
+				 */
+				function createAll(){
+					createGrid();
+					createSquare('orange', foodPoint);
+					createSnack();
+				}
+				
+				/**
+				 * 		开启遮罩框
+				 * 			参数
+				 * 				text: 要显示的文本
+				 * 				canContinue: 是否可以继续
+				 */
+				function showMask(text, canContinue){
+					mask.style.display = 'block';
+					mask.style.opacity = 1;
+				}
+			};
+		</script>
+	</body>
+</html>
