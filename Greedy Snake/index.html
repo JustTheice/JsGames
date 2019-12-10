@@ -4,11 +4,12 @@
 		<meta charset="utf-8">
 		<title></title>
 		<link rel="stylesheet" type="text/css" href="reset.css"/>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
 		<style type="text/css">
 			#wrap {
 				position: relative;
-				width: 500px;
 				margin: 0 auto;
+				width: 501px;
 			}
 			#canvas{
 				margin: 0 auto;
@@ -19,9 +20,9 @@
 				/* background: #000; */
 				/* opacity: .5; */
 				background-color: rgba(0,0,0,.5);
-				width: 500px;
+				width: 501px;
 				transition: .5s;
-				height: 500px;
+				height: 501px;
 				position: absolute;
 				left: 50%;
 				transform: translateX(-50%);
@@ -120,6 +121,10 @@
 				height: 100px;
 				background: skyblue;
 				cursor: pointer;
+				font-size: 50px;
+				text-align: center;
+				line-height: 100px;
+				text-shadow: #666666 1px 1px;
 			}
 			#controls div:nth-child(1){
 				transform: translate(0, -100%);
@@ -159,7 +164,7 @@
 							<span style="color: royalblue;">蓝色</span>蛇身，
 							<span style="color: orange;">橙色</span>食物
 					</p>
-					<p>游戏玩法与传统贪吃蛇相同，吃掉更多食物成长为远古巨蟒</p>
+					<p>上下左右操作方向，空格暂停，游戏玩法与传统贪吃蛇相同</p>
 				</div>
 			</div>
 			<div class="mask2">
@@ -174,7 +179,7 @@
 				</div>
 			</div>
 			<a href="javascript:;" id="pause"></a>
-			<canvas id="canvas" width="500" height="500"></canvas>
+			<canvas id="canvas" width="501" height="501"></canvas>
 			<div id="controls">
 				<div>上</div>
 				<div>下</div>
@@ -207,6 +212,7 @@
 						preDir = dir;
 				let timer;
 				let isPlaying = false;
+				let gameOver = true;
 				if(!storageUtil.read('GreedySnakeInfo').highestScore){
 					storageUtil.save('GreedySnakeInfo', {highestScore:0});
 				}
@@ -227,6 +233,7 @@
 					});
 					
 					isPlaying = true;
+					gameOver = false;
 					
 					//绑定按键监听
 					document.addEventListener('keydown', keyPress);
@@ -239,15 +246,15 @@
 				pauseBtn.onclick = function(){
 					clearInterval(timer);
 					showStateMask('扶你起来，还能再战300回合', true);
-					document.removeEventListener('keydown', keyPress);
+					isPlaying = false;
 				};
 				
 				//继续游戏
 				continueBtn.onclick = function(){
 					pauseBtn.style.display = 'block';
 					mask2.style.opacity = '0';
-					document.addEventListener('keydown', keyPress);
 					walk();
+					isPlaying = true;
 				}
 				
 				//重新开始
@@ -259,12 +266,31 @@
 					dir = 3;
 					//重置分数
 					currentScore = 0;
+					isPlaying = true;
+					gameOver = false;
 					//重新初始化
-					document.addEventListener('keydown', keyPress);
 					ctx.clearRect(0,0, canvas.clientWidth,canvas.clientHeight);
 					createAll();
 					walk();
 				};
+				
+				//空格暂停
+				document.addEventListener('keydown', function(ev){
+					if(ev.keyCode === 32){
+						ev.preventDefault();
+						if(!gameOver){
+							if(isPlaying){
+								clearInterval(timer);
+								showStateMask('应该把空格建扣掉', true);
+							}else{
+								pauseBtn.style.display = 'block';
+								mask2.style.opacity = '0';
+								walk();
+							}
+							isPlaying = !isPlaying;
+						}
+					}
+				});
 				
 				//初始化
 				if(canvas.getContext){
@@ -276,7 +302,26 @@
 					createAll();
 				}
 				
-			
+				
+				//移动端：为四个方向按钮绑定事件
+				let controls = document.querySelectorAll('#controls>div');
+				for(let i=0;i<controls.length;i++){
+					let fn;
+					switch (i){
+						case 0: fn = function(){dir = preDir===1 ? 1 : 0};break;
+						case 1: fn = function(){dir = preDir===0 ? 0 : 1};break;
+						case 2: fn = function(){dir = preDir===3 ? 3 : 2};break;
+						case 3: fn = function(){dir = preDir===2 ? 2 : 3};break;
+						default: break;
+					}
+					controls[i].addEventListener('touchstart', function(){
+						if(!isPlaying){
+							return;
+						}
+						fn();
+					});
+				}
+				
 				
 				/**
 				 * 		生成一个颜色块
@@ -306,7 +351,9 @@
 				 * 		生成游戏网格
 				 */
 				function createGrid(){
-					for(let i=0;i<20;i++){
+					ctx.save();
+					ctx.strokeStyle = 'white';
+					for(let i=0;i<21;i++){
 						//画竖线
 						ctx.beginPath();
 						ctx.moveTo(i*25+0.5, 0);
@@ -318,6 +365,7 @@
 						ctx.lineTo(500, i*25+0.5);
 						ctx.stroke();
 					}
+					ctx.restore();
 				}
 				
 				/**
@@ -423,7 +471,8 @@
 						if(newPoint.x<0 || newPoint.x>19 || newPoint.y<0 || newPoint.y>19){
 							showStateMask('你一头撞在墙上，嗝屁了。', false);
 							clearInterval(timer);
-							document.removeEventListener('keydown', keyPress);
+							isPlaying = false;
+							gameOver = true;
 							if(highestScore>storageUtil.read('GreedySnakeInfo').highestScore){
 								storageUtil.save('GreedySnakeInfo', {highestScore});
 							}
@@ -434,7 +483,8 @@
 							if(newPoint.x===point.x && newPoint.y===point.y){
 								showStateMask('你把自己咬死了，智障！', false);
 								clearInterval(timer);
-								document.removeEventListener('keydown', keyPress);
+								isPlaying = false;
+								gameOver = true;
 								if(highestScore>storageUtil.read('GreedySnakeInfo').highestScore){
 									storageUtil.save('GreedySnakeInfo', {highestScore});
 								}
