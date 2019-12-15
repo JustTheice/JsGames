@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>飞机大战</title>
+		<link rel="stylesheet" type="text/css" href="reset.css"/>
+		<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	</head>
+	<body>
+		<div id="wrap">
+			<div class="mask1">
+				<div class="menu">
+					<a href="javascript:;">开始游戏</a>
+					<a href="javascript:;">排行榜</a>
+					<a href="javascript:;">游戏设置</a>
+				</div>
+				<div class="pause">
+					<a href="javascript:;">继续游戏</a>
+					<p>当前得分 </p>
+					<p>最高得分 </p>
+				</div>
+			</div>
+			<canvas id="canvas" height="550"></canvas>
+		</div>
+	</body>
+	<script type="text/javascript">
+		window.onload = function(){
+			let planesInfo = [ //记录飞机种类
+				{
+					type: 'self',
+					life: 250,
+					ATK: 30,
+					imgSrc: './img/战斗机.png',
+					width: 90,
+					height: 90,
+					speed: Infinity,
+					flyMode: 'all',
+				},{
+					type: 'enemy1',
+					life: 50,
+					ATK: 0,
+					imgSrc: 'yellow',
+					width: 50,
+					height: 50,
+					speed: 2,
+					flyMode: 0 //飞行模式，0正常 1正常曲线 2反向 3反向曲线
+				}
+			]
+			
+			let canvas = document.querySelector('#canvas');
+			let mask1 = document.querySelector('.mask1');
+			let startBtn = document.querySelector('.menu>a:nth-child(1)');
+			let timer, bulletTimer, enemyTimer;
+			//动态设定canvas大小
+			canvas.width = canvas.height * 0.75;
+			
+			let cW = canvas.offsetWidth,
+					cH = canvas.offsetHeight;
+			mask1.style.height = cH + 'px';
+			mask1.style.width = cW + 'px';
+			let selfInfo = planesInfo.find((planeInfo, index) => {
+				return planeInfo.type === 'self';
+			});
+			selfInfo.selfX = cW/2 - selfInfo.width/2;
+			selfInfo.selfY = cH - selfInfo.height;
+			let gameData = {
+				score: 0,
+				isPlaying: false,
+				isOver: false,
+				bgY: 0
+			};
+			let bullets = []; //记录在场子弹
+			let presentEnemies = []; //记录在场敌军
+			
+			if(canvas.getContext){
+				var ctx = canvas.getContext('2d');
+				
+				createPlane('self', {x:selfInfo.selfX,y:selfInfo.selfY});
+				
+			}
+			
+			startBtn.onclick = function(){
+				walk();
+				mask1.style.opacity = 0;
+			};
+			
+			document.onmousemove = function(ev){
+				let x = ev.clientX - canvas.offsetLeft,
+						y = ev.clientY - canvas.offsetTop;
+				let plane = planesInfo.find((plane, index) => {
+					return plane.type === 'self';
+				});
+				let w = plane.width,
+						h = plane.height;
+				x -= w/2;
+				y -= h/2;
+				
+				//判断边界
+				if(x < 0-w/2){
+					x = 0-w/2
+				}
+				if(y < 0-h/2){
+					y = 0-h/2;
+				}
+				if(x > canvas.offsetWidth-w/2){
+					x = canvas.offsetWidth-w/2;
+				}
+				if(y > canvas.offsetHeight-h/2){
+					y = canvas.offsetHeight-h/2;
+				}
+				//更新self坐标
+				selfInfo.selfX = x;
+				selfInfo.selfY = y;
+				
+				// ctx.clearRect(0,0, canvas.offsetWidth,canvas.offsetHeight);
+				// // createPlane('self', {x, y});
+			}
+			
+			/**
+			 * 		画一个战斗机
+			 * 			参数：
+			 * 				type: 飞机类型
+			 * 				{x, y}: 位置
+			 * 				cb: 画完后的回调
+			 * 
+			 */
+			function createPlane(type, {x, y}, cb){
+				ctx.save();
+				//查找资料
+				let plane = planesInfo.find((planeInfo,index) => {
+					return planeInfo.type === type;
+				});
+				//绘画
+				if(type == 'self'){
+					let img = new Image();
+					img.src = plane.imgSrc;
+					img.onload = function(){
+						ctx.drawImage(img, x,y, plane.width,plane.height);
+						cb && cb();
+					}
+				}else{
+					ctx.fillStyle = plane.imgSrc;
+					ctx.fillRect(x,y, plane.width,plane.height);
+					cb && cb();
+				}
+				ctx.restore();
+			}
+		
+		
+			/**
+			 * 		开始游戏，逻辑函数
+			 */
+			function walk(){
+				timer = setInterval(() => {
+					//清屏、重绘
+					ctx.clearRect(0,0, cW,cH);
+					createPlane('self', {x:selfInfo.selfX, y:selfInfo.selfY});
+					bullets.forEach((bullet,index) => {
+						createBullet(bullet);
+					});
+					presentEnemies.forEach((enemy, index) => {
+						createPlane(enemy.type, {x:enemy.x, y:enemy.y});
+					});
+					
+					
+					//更新敌机
+					presentEnemies.forEach((enemy, index) => {
+						switch (enemy.flyMode){
+							case 1:	enemy.x = Math.sin(enemy.y)*100;
+							case 0: enemy.y += enemy.speed;
+								break;
+							case 3: enemy.x -= Math.sin(enemy.y)*100;
+							case 2: enemy.y -= enemy.speed;
+								break;
+							default:
+								break;
+						}
+						if(enemy.y < 0-enemy.height || enemy.y > cH){
+							presentEnemies.splice(index, 1);
+						}
+					});
+					//更新子弹
+					bullets.forEach((bullet,index) => {
+						let bulletIndex = index;
+						bullet.y -= bullet.speed;
+						//判断边界
+						if(bullet.y < 0-bullet.height){
+							bullets.splice(index, 1);
+						}
+						//判断击中
+						presentEnemies.forEach((enemy, index) => {
+							//判断子弹击中敌机
+							if((bullet.x+bullet.width>enemy.x && bullet.x<enemy.x+enemy.width) && (bullet.y+bullet.height>enemy.y && bullet.y<enemy.y+enemy.height)){
+								enemy.life -= bullet.ATR;
+								bullets.splice(bulletIndex, 1);
+								if(enemy.life <= 0){
+									presentEnemies.splice(index, 1);
+									gameData.score++;
+								}	
+							}
+							//判断敌机击中玩家
+							if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
+								clearGame();
+							}
+						});
+					});
+					
+					//背景滑动
+					gameData.bgY ++;
+					if(gameData.bgY >= 550){
+						gameData.bgY = 0;
+					}
+					canvas.style.backgroundPositionY = gameData.bgY + 'px';
+				}, 1000/60);
+				
+				bulletTimer = setInterval(() => {
+					bullets.push(new SelfBullet(1));
+				}, 300);
+				
+				enemyTimer = setInterval(() => {
+					presentEnemies.push(new EnemyCreater('enemy1'));
+				}, 2000)
+			
+				
+			}
+			
+			/**
+			 * 		子弹 构造函数
+			 */
+			function SelfBullet(lv){
+				let w,h,ATR;
+				switch (lv){
+					case 1: w = 10; h = 25; ATR = 30;
+						break;
+					case 2: w = 13; h = 25; ATR = 50;
+						break;
+					case 3: w = 20; h = 30; ATR = 90;
+						break;
+				}
+				this.width = w;
+				this.height = h;
+				this.speed = 8;
+				this.ATR = ATR;
+				this.x = selfInfo.selfX + selfInfo.width/2 - this.width/2;
+				this.y = selfInfo.selfY - this.height;
+				this.color = 'skyblue';
+			}
+			
+			/**
+			 * 		敌机 构造函数
+			 */
+			function EnemyCreater(type){
+				let enemyPlane = planesInfo.find((planeInfo, index) => planeInfo.type === type);
+				let x = Math.random()*cW, y;
+				switch (enemyPlane.flyMode){
+					case 1: 
+					case 0: 
+						y = 0;break;
+					case 3: 
+					case 2: 
+						y = cH;break;
+					default: break;
+				}
+				
+				
+				this.type = enemyPlane.type;
+				this.width = enemyPlane.width;
+				this.height = enemyPlane.height;
+				this.x = x;
+				this.y = y;
+				this.color = enemyPlane.imgSrc;
+				this.speed = enemyPlane.speed;
+				this.flyMode = enemyPlane.flyMode;
+				this.life = enemyPlane.life;
+			}
+			
+			/**
+			 * 		绘画 子弹
+			 * 			参数：
+			 * 				bullet: 子弹数据
+			 */
+			function createBullet(bullet){
+				ctx.save();
+				ctx.fillStyle = bullet.color;
+				ctx.fillRect(bullet.x,bullet.y, bullet.width,bullet.height);
+				ctx.restore();
+			}
+			
+			/**
+			 * 		关闭定时器
+			 */
+			function clearGame(){
+				clearInterval(timer);
+				clearInterval(bulletTimer);
+				clearInterval(enemyTimer);
+			}
+		};
+	</script>
+</html>

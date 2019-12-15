@@ -1,0 +1,75 @@
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+#wrap {
+  height: 100%;
+  text-align: center;
+}
+#wrap #canvas {
+  background: gray;
+  background: url(../img/bg.jpg);
+  background-size: 100% 100%;
+  background-position-y: 0;
+}
+#wrap .mask1 {
+  transition: .5s;
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#wrap .mask1 .menu {
+  margin: 190px auto;
+  display: none;
+}
+#wrap .mask1 .menu a {
+  text-decoration: none;
+  text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  display: block;
+  color: black;
+  width: 200px;
+  height: 50px;
+  margin: 30px auto;
+  border: 2px solid;
+  border-color: black;
+  background: #ffffff;
+  transition: .3s;
+}
+#wrap .mask1 .menu a:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+#wrap .mask1 .pause {
+  margin: 190px auto;
+}
+#wrap .mask1 .pause a {
+  text-decoration: none;
+  text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  display: block;
+  color: black;
+  width: 200px;
+  height: 50px;
+  margin: 30px auto;
+  border: 2px solid;
+  border-color: black;
+  background: #ffffff;
+  transition: .3s;
+}
+#wrap .mask1 .pause a:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+#wrap .mask1 .pause p {
+  text-align: center;
+  font-size: 30px;
+}
+#wrap .mask1 .pause p:nth-child(2) {
+  color: white;
+}
+#wrap .mask1 .pause p:nth-child(3) {
+  color: orange;
+}
