@@ -68,6 +68,7 @@
 			let continueBtn = pausePage.querySelector('a:nth-child(1)');
 			let toMenuBtn = pausePage.querySelector('a:nth-child(2)');
 			let timer, bulletTimer, enemyTimer;
+			let scores = document.querySelectorAll('.score');
 			//动态设定canvas大小
 			canvas.width = canvas.height * 0.75;
 			
@@ -84,7 +85,8 @@
 				score: 0,
 				isPlaying: false,
 				isOver: true,
-				bgY: 0
+				bgY: 0,
+				highestScore: 0
 			};
 			let bullets = []; //记录在场子弹
 			let presentEnemies = []; //记录在场敌军
@@ -117,6 +119,8 @@
 						clearGame();
 						pausePage.style.display = 'block';
 						mask1.style.opacity = 1;
+						scores[0].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
+						scores[0].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
 					}else{
 						walk();
 						pausePage.style.display = 'none';
@@ -143,6 +147,10 @@
 				gameData.isOver = true;
 				menuPage.style.display = 'block';
 			}
+			
+			
+			//结束界面
+			
 			
 			document.onmousemove = function(ev){
 				let x = ev.clientX - canvas.offsetLeft,
@@ -256,6 +264,9 @@
 								if(enemy.life <= 0){
 									presentEnemies.splice(index, 1);
 									gameData.score++;
+									if(gameData.score > gameData.highestScore){
+										gameData.highestScore = gameData.score;
+									}
 								}	
 							}
 							//判断敌机击中玩家
@@ -263,6 +274,9 @@
 								clearGame();
 								gameData.isPlaying = false;
 								gameData.isOver = true;
+								//弹出游戏失败界面
+								overPage.style.display = 'block';
+								mask1.style.opacity = 1;
 							}
 						});
 					});

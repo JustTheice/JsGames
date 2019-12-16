@@ -14,14 +14,14 @@ body {
   background-position-y: 0;
 }
 #wrap .mask1 {
-  transition: .5s;
+  transition: 0.5s;
   background: rgba(0, 0, 0, 0.5);
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 #wrap .mask1 .menu {
-  margin: 190px auto;
+  margin: 170px auto;
 }
 #wrap .mask1 .menu a {
   text-decoration: none;
@@ -36,13 +36,13 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: .3s;
+  transition: 0.3s;
 }
 #wrap .mask1 .menu a:hover {
   background: rgba(255, 255, 255, 0.5);
 }
 #wrap .mask1 .pause {
-  margin: 190px auto;
+  margin: 137px auto 75px auto;
   display: none;
 }
 #wrap .mask1 .pause a {
@@ -58,7 +58,7 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: .3s;
+  transition: 0.3s;
 }
 #wrap .mask1 .pause a:hover {
   background: rgba(255, 255, 255, 0.5);
@@ -74,7 +74,7 @@ body {
   color: orange;
 }
 #wrap .mask1 .pause > p {
-  margin-top: 150px;
+  margin-top: 70px;
   text-align: center;
   font-size: 15px;
   color: lightgray;
