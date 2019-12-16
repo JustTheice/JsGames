@@ -16,8 +16,20 @@
 				</div>
 				<div class="pause">
 					<a href="javascript:;">继续游戏</a>
-					<p>当前得分 </p>
-					<p>最高得分 </p>
+					<a href="javascript:;">回到菜单</a>
+					<div class="score">
+						<p>当前得分：<span></span></p>
+						<p>最高得分：<span></span></p>
+					</div>
+					<p>按P继续游戏</p>
+				</div>
+				<div class="over">
+					<p>Game Over!</p>
+					<div class="score">
+						<p>当前得分： <span></span></p>
+						<p>最高得分： <span></span></p>
+					</div>
+					<p>点击任意处回到菜单</p>
 				</div>
 			</div>
 			<canvas id="canvas" height="550"></canvas>
@@ -48,8 +60,13 @@
 			]
 			
 			let canvas = document.querySelector('#canvas');
-			let mask1 = document.querySelector('.mask1');
+			let mask1 = document.querySelector('.mask1'); //遮罩框和三个交互界面
+			let menuPage = mask1.querySelector('.menu');
+			let pausePage = mask1.querySelector('.pause');
+			let overPage = mask1.querySelector('.over');
 			let startBtn = document.querySelector('.menu>a:nth-child(1)');
+			let continueBtn = pausePage.querySelector('a:nth-child(1)');
+			let toMenuBtn = pausePage.querySelector('a:nth-child(2)');
 			let timer, bulletTimer, enemyTimer;
 			//动态设定canvas大小
 			canvas.width = canvas.height * 0.75;
@@ -66,7 +83,7 @@
 			let gameData = {
 				score: 0,
 				isPlaying: false,
-				isOver: false,
+				isOver: true,
 				bgY: 0
 			};
 			let bullets = []; //记录在场子弹
@@ -79,10 +96,53 @@
 				
 			}
 			
+			//开始游戏
 			startBtn.onclick = function(){
 				walk();
 				mask1.style.opacity = 0;
+				menuPage.style.display = 'none';
+				gameData.isOver = false;
+				gameData.isPlaying = true;
 			};
+			
+			
+			//暂停界面
+			//按P暂停/继续游戏
+			document.addEventListener('keydown', function(ev){
+				if(gameData.isOver){
+					return;
+				}
+				if(ev.keyCode === 80){
+					if(gameData.isPlaying){
+						clearGame();
+						pausePage.style.display = 'block';
+						mask1.style.opacity = 1;
+					}else{
+						walk();
+						pausePage.style.display = 'none';
+						mask1.style.opacity = 0;
+					}
+					gameData.isPlaying = !gameData.isPlaying;
+					console.log(gameData.isPlaying)
+				}
+			});
+			
+			//继续游戏
+			continueBtn.onclick = function(){
+				walk();
+				pausePage.style.display = 'none';
+				mask1.style.opacity = 0;
+				gameData.isPlaying = true;
+			};
+			
+			//回到菜单
+			toMenuBtn.onclick = function(){
+				clearGame();
+				pausePage.style.display = 'none';
+				gameData.isPlaying = false;
+				gameData.isOver = true;
+				menuPage.style.display = 'block';
+			}
 			
 			document.onmousemove = function(ev){
 				let x = ev.clientX - canvas.offsetLeft,
@@ -201,6 +261,8 @@
 							//判断敌机击中玩家
 							if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
 								clearGame();
+								gameData.isPlaying = false;
+								gameData.isOver = true;
 							}
 						});
 					});
@@ -219,8 +281,7 @@
 				
 				enemyTimer = setInterval(() => {
 					presentEnemies.push(new EnemyCreater('enemy1'));
-				}, 2000)
-			
+				}, 2000);
 				
 			}
 			
@@ -287,7 +348,7 @@
 			}
 			
 			/**
-			 * 		关闭定时器
+			 * 		关闭游戏相关定时器
 			 */
 			function clearGame(){
 				clearInterval(timer);

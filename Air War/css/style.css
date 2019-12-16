@@ -22,7 +22,6 @@ body {
 }
 #wrap .mask1 .menu {
   margin: 190px auto;
-  display: none;
 }
 #wrap .mask1 .menu a {
   text-decoration: none;
@@ -44,6 +43,7 @@ body {
 }
 #wrap .mask1 .pause {
   margin: 190px auto;
+  display: none;
 }
 #wrap .mask1 .pause a {
   text-decoration: none;
@@ -63,13 +63,59 @@ body {
 #wrap .mask1 .pause a:hover {
   background: rgba(255, 255, 255, 0.5);
 }
-#wrap .mask1 .pause p {
+#wrap .mask1 .pause .score p {
   text-align: center;
   font-size: 30px;
 }
-#wrap .mask1 .pause p:nth-child(2) {
+#wrap .mask1 .pause .score p:nth-child(1) {
   color: white;
 }
-#wrap .mask1 .pause p:nth-child(3) {
+#wrap .mask1 .pause .score p:nth-child(2) {
+  color: orange;
+}
+#wrap .mask1 .pause > p {
+  margin-top: 150px;
+  text-align: center;
+  font-size: 15px;
+  color: lightgray;
+}
+#wrap .mask1 .over {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  cursor: pointer;
+  display: none;
+}
+#wrap .mask1 .over > p:nth-child(1) {
+  padding-top: 190px;
+  text-align: center;
+  font-size: 50px;
+  color: white;
+  margin-bottom: 20px;
+}
+#wrap .mask1 .over > p:nth-child(3) {
+  margin-top: 150px;
+  text-align: center;
+  font-size: 15px;
+  color: lightgray;
+}
+#wrap .mask1 .over .score p {
+  text-align: center;
+  font-size: 30px;
+}
+#wrap .mask1 .over .score p:nth-child(1) {
+  color: white;
+}
+#wrap .mask1 .over .score p:nth-child(2) {
+  color: orange;
+}
+.scoreStyle p {
+  text-align: center;
+  font-size: 30px;
+}
+.scoreStyle p:nth-child(1) {
+  color: white;
+}
+.scoreStyle p:nth-child(2) {
   color: orange;
 }
