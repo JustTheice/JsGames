@@ -150,7 +150,11 @@
 			
 			
 			//结束界面
-			
+			//回到菜单
+			overPage.onclick = function(){
+				this.style.display = 'none';
+				menuPage.style.display = 'block';
+			};
 			
 			document.onmousemove = function(ev){
 				let x = ev.clientX - canvas.offsetLeft,
