@@ -41,6 +41,7 @@
 						<h3>姓名</h3>
 						<h3>分数</h3>
 					</div>
+					<p>点击任意处返回菜单</p>
 				</div>
 			</div>
 			<canvas id="canvas" height="550"></canvas>
@@ -145,7 +146,7 @@
 				let ul = document.createElement('ul');
 				bTools.storageUtil.read('AirWarInfo').forEach((item,index) => {
 					let li = document.createElement('li');
-					li.innerHTML = `名字${item.name}，分数${item.highestScore}`;
+					li.innerHTML = `<span>${item.name}</span><span>${item.highestScore}</span>`;
 					ul.appendChild(li);
 				});
 				rankPage.appendChild(ul);
@@ -213,6 +214,14 @@
 			//保存
 			nameDiv.onclick = function(e){
 				e.stopPropagation();
+			};
+			
+			
+			//排行榜页面
+			//回到菜单
+			rankPage.onclick = function(){
+				this.style.display = 'none';
+				menuPage.style.display = 'block';
 			};
 			
 			document.onmousemove = function(ev){

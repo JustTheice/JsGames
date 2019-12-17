@@ -111,6 +111,7 @@ body {
 }
 #wrap .mask1 .rank {
   height: 100%;
+  position: relative;
 }
 #wrap .mask1 .rank .top {
   margin: 0 auto;
@@ -133,6 +134,30 @@ body {
   height: 50px;
   line-height: 50px;
   padding: 0 12.5px;
+}
+#wrap .mask1 .rank ul {
+  width: 250px;
+  margin: 0 auto;
+}
+#wrap .mask1 .rank ul li {
+  color: white;
+  font-size: 25px;
+  text-align: left;
+}
+#wrap .mask1 .rank ul li span {
+  display: inline-block;
+  width: 100px;
+  height: 35px;
+  line-height: 35px;
+  padding: 0 12.5px;
+  text-align: center;
+}
+#wrap .mask1 .rank > p {
+  position: absolute;
+  color: lightgray;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 50px;
 }
 .scoreStyle p {
   text-align: center;
