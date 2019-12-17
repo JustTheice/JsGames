@@ -5,13 +5,14 @@
 		<title>飞机大战</title>
 		<link rel="stylesheet" type="text/css" href="reset.css"/>
 		<link rel="stylesheet" type="text/css" href="css/style.css"/>
+		<script src="js/saveUtil.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
 		<div id="wrap">
 			<div class="mask1">
 				<div class="menu">
 					<a href="javascript:;">开始游戏</a>
-					<a href="javascript:;">排行榜</a>
+					<a href="javascript:;" class="rank-btn">排行榜</a>
 					<a href="javascript:;">游戏设置</a>
 				</div>
 				<div class="pause">
@@ -25,11 +26,21 @@
 				</div>
 				<div class="over">
 					<p>Game Over!</p>
+					<div class="name">
+						<input type="text" placeholder="请输入你的昵称"/>
+						保存<input type="checkbox" checked>
+					</div>
 					<div class="score">
 						<p>当前得分： <span></span></p>
 						<p>最高得分： <span></span></p>
 					</div>
 					<p>点击任意处回到菜单</p>
+				</div>
+				<div class="rank">
+					<div class="top">
+						<h3>姓名</h3>
+						<h3>分数</h3>
+					</div>
 				</div>
 			</div>
 			<canvas id="canvas" height="550"></canvas>
@@ -60,15 +71,20 @@
 			]
 			
 			let canvas = document.querySelector('#canvas');
-			let mask1 = document.querySelector('.mask1'); //遮罩框和三个交互界面
+			let mask1 = document.querySelector('.mask1'); //遮罩框和几个交互界面
 			let menuPage = mask1.querySelector('.menu');
 			let pausePage = mask1.querySelector('.pause');
 			let overPage = mask1.querySelector('.over');
+			let rankPage = document.getElementsByClassName('rank')[0];
 			let startBtn = document.querySelector('.menu>a:nth-child(1)');
+			let rankBtn = menuPage.querySelector('.rank-btn');
 			let continueBtn = pausePage.querySelector('a:nth-child(1)');
 			let toMenuBtn = pausePage.querySelector('a:nth-child(2)');
 			let timer, bulletTimer, enemyTimer;
 			let scores = document.querySelectorAll('.score');
+			let nameDiv = document.querySelector('.name');
+			let nameIpt = nameDiv.querySelector('input[type=text]');
+			let btnIpt = nameDiv.querySelector('input[type=checkbox]');
 			//动态设定canvas大小
 			canvas.width = canvas.height * 0.75;
 			
@@ -81,12 +97,26 @@
 			});
 			selfInfo.selfX = cW/2 - selfInfo.width/2;
 			selfInfo.selfY = cH - selfInfo.height;
+			
+			//获取历史最高分
+			var highestScore = 0;
+			if(bTools.storageUtil.read('AirWarInfo').length){
+				bTools.storageUtil.read('AirWarInfo').forEach((item,index) => {
+					if(item.highestScore > highestScore){
+						highestScore = item.highestScore;
+					}
+				});
+			}else{
+				let arr = [];
+				bTools.storageUtil.save('AirWarInfo', arr);
+			}
+			
 			let gameData = {
 				score: 0,
 				isPlaying: false,
 				isOver: true,
 				bgY: 0,
-				highestScore: 0
+				highestScore
 			};
 			let bullets = []; //记录在场子弹
 			let presentEnemies = []; //记录在场敌军
@@ -105,7 +135,22 @@
 				menuPage.style.display = 'none';
 				gameData.isOver = false;
 				gameData.isPlaying = true;
+				gameData.score = 0;
 			};
+			
+			//排行榜
+			rankBtn.onclick = function(){
+				menuPage.style.display = 'none';
+				rankPage.style.display = 'block';
+				let ul = document.createElement('ul');
+				bTools.storageUtil.read('AirWarInfo').forEach((item,index) => {
+					let li = document.createElement('li');
+					li.innerHTML = `名字${item.name}，分数${item.highestScore}`;
+					ul.appendChild(li);
+				});
+				rankPage.appendChild(ul);
+			};
+			
 			
 			
 			//暂停界面
@@ -154,6 +199,20 @@
 			overPage.onclick = function(){
 				this.style.display = 'none';
 				menuPage.style.display = 'block';
+				//判断保存
+				let name = nameIpt.value ? nameIpt.value : '匿名玩家';
+				if(btnIpt.checked){
+					let dataArr =  bTools.storageUtil.read('AirWarInfo');
+					dataArr.push({name, highestScore: gameData.highestScore});
+					bTools.storageUtil.save('AirWarInfo',dataArr);
+				}
+				overPage.style.display = 'none';
+				menuPage.style.display = 'block';
+			};
+				
+			//保存
+			nameDiv.onclick = function(e){
+				e.stopPropagation();
 			};
 			
 			document.onmousemove = function(ev){
@@ -186,7 +245,7 @@
 				
 				// ctx.clearRect(0,0, canvas.offsetWidth,canvas.offsetHeight);
 				// // createPlane('self', {x, y});
-			}
+			};
 			
 			/**
 			 * 		画一个战斗机
@@ -281,6 +340,11 @@
 								//弹出游戏失败界面
 								overPage.style.display = 'block';
 								mask1.style.opacity = 1;
+								scores[1].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
+								scores[1].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
+								
+								//清空敌机数组
+								presentEnemies = [];
 							}
 						});
 					});

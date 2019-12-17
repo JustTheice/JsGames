@@ -42,7 +42,7 @@ body {
   background: rgba(255, 255, 255, 0.5);
 }
 #wrap .mask1 .pause {
-  margin: 137px auto 75px auto;
+  margin: 142px auto 70px auto;
   display: none;
 }
 #wrap .mask1 .pause a {
@@ -109,6 +109,31 @@ body {
 #wrap .mask1 .over .score p:nth-child(2) {
   color: orange;
 }
+#wrap .mask1 .rank {
+  height: 100%;
+}
+#wrap .mask1 .rank .top {
+  margin: 0 auto;
+  padding: 20px;
+  width: 250px;
+}
+#wrap .mask1 .rank .top:after {
+  display: block;
+  clear: both;
+  content: '';
+  height: 0;
+  visibility: hidden;
+}
+#wrap .mask1 .rank .top h3 {
+  text-align: center;
+  color: white;
+  font-size: 30px;
+  float: left;
+  width: 100px;
+  height: 50px;
+  line-height: 50px;
+  padding: 0 12.5px;
+}
 .scoreStyle p {
   text-align: center;
   font-size: 30px;
@@ -118,4 +143,11 @@ body {
 }
 .scoreStyle p:nth-child(2) {
   color: orange;
+}
+.clearFix:after {
+  display: block;
+  clear: both;
+  content: '';
+  height: 0;
+  visibility: hidden;
 }
