@@ -14,7 +14,7 @@ body {
   background-position-y: 0;
 }
 #wrap .mask1 {
-  transition: 0.5s;
+  transition: .5s;
   background: rgba(0, 0, 0, 0.5);
   position: absolute;
   left: 50%;
@@ -36,13 +36,13 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: 0.3s;
+  transition: .3s;
 }
 #wrap .mask1 .menu a:hover {
   background: rgba(255, 255, 255, 0.5);
 }
 #wrap .mask1 .pause {
-  margin: 137px auto 75px auto;
+  margin: 142px auto 70px auto;
   display: none;
 }
 #wrap .mask1 .pause a {
@@ -58,7 +58,7 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: 0.3s;
+  transition: .3s;
 }
 #wrap .mask1 .pause a:hover {
   background: rgba(255, 255, 255, 0.5);
