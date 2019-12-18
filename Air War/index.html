@@ -28,7 +28,7 @@
 					<p>Game Over!</p>
 					<div class="name">
 						<input type="text" placeholder="请输入你的昵称"/>
-						保存<input type="checkbox" checked>
+						<label for="save">保存</label><input type="checkbox" id="save" checked>
 					</div>
 					<div class="score">
 						<p>当前得分： <span></span></p>
@@ -43,6 +43,10 @@
 					</div>
 					<p>点击任意处返回菜单</p>
 				</div>
+			</div>
+			<div id="playing">
+				<p>分数: <span>0</span></p>
+				<p>生命: <span>250</span></p>
 			</div>
 			<canvas id="canvas" height="550"></canvas>
 		</div>
@@ -77,6 +81,7 @@
 			let pausePage = mask1.querySelector('.pause');
 			let overPage = mask1.querySelector('.over');
 			let rankPage = document.getElementsByClassName('rank')[0];
+			let playingMask = document.querySelector('#playing');
 			let startBtn = document.querySelector('.menu>a:nth-child(1)');
 			let rankBtn = menuPage.querySelector('.rank-btn');
 			let continueBtn = pausePage.querySelector('a:nth-child(1)');
@@ -112,12 +117,17 @@
 				bTools.storageUtil.save('AirWarInfo', arr);
 			}
 			
+			let settings = {
+				selfLife: 250
+			}
+			
 			let gameData = {
 				score: 0,
 				isPlaying: false,
 				isOver: true,
 				bgY: 0,
-				highestScore
+				highestScore,
+				life: settings.selfLife
 			};
 			let bullets = []; //记录在场子弹
 			let presentEnemies = []; //记录在场敌军
@@ -134,21 +144,38 @@
 				walk();
 				mask1.style.opacity = 0;
 				menuPage.style.display = 'none';
+				playingMask.style.display = 'block';
 				gameData.isOver = false;
 				gameData.isPlaying = true;
 				gameData.score = 0;
+				gameData.life = settings.selfLife;
 			};
 			
 			//排行榜
 			rankBtn.onclick = function(){
 				menuPage.style.display = 'none';
 				rankPage.style.display = 'block';
+				if(rankPage.querySelector('ul')){
+					rankPage.removeChild(rankPage.querySelector('ul'));
+				}
 				let ul = document.createElement('ul');
-				bTools.storageUtil.read('AirWarInfo').forEach((item,index) => {
+				let rankArr = bTools.storageUtil.read('AirWarInfo');
+				for(let i=0;i<rankArr.length-1;i++){
+					for (let j=0;j<rankArr.length-1-i;j++) {
+						if(rankArr[j].highestScore < rankArr[j+1].highestScore){
+							let t = rankArr[j];
+							rankArr[j] = rankArr[j+1];
+							rankArr[j+1] = t;
+						}
+					}
+				}
+				rankArr = rankArr.slice(0,10);
+				rankArr.forEach((item,index) => {
 					let li = document.createElement('li');
 					li.innerHTML = `<span>${item.name}</span><span>${item.highestScore}</span>`;
 					ul.appendChild(li);
 				});
+				
 				rankPage.appendChild(ul);
 			};
 			
@@ -204,8 +231,9 @@
 				let name = nameIpt.value ? nameIpt.value : '匿名玩家';
 				if(btnIpt.checked){
 					let dataArr =  bTools.storageUtil.read('AirWarInfo');
-					dataArr.push({name, highestScore: gameData.highestScore});
+					dataArr.push({name, highestScore: gameData.score});
 					bTools.storageUtil.save('AirWarInfo',dataArr);
+					gameData.score = 0;
 				}
 				overPage.style.display = 'none';
 				menuPage.style.display = 'block';
@@ -336,6 +364,7 @@
 								if(enemy.life <= 0){
 									presentEnemies.splice(index, 1);
 									gameData.score++;
+									playingMask.querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
 									if(gameData.score > gameData.highestScore){
 										gameData.highestScore = gameData.score;
 									}
@@ -343,15 +372,19 @@
 							}
 							//判断敌机击中玩家
 							if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
-								clearGame();
-								gameData.isPlaying = false;
-								gameData.isOver = true;
-								//弹出游戏失败界面
-								overPage.style.display = 'block';
-								mask1.style.opacity = 1;
-								scores[1].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
-								scores[1].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
-								
+								gameData.life -= 50;
+								playingMask.querySelector('p:nth-child(2)>span').innerHTML = gameData.life;
+								if(gameData.life <= 0){
+									clearGame();
+									gameData.isPlaying = false;
+									gameData.isOver = true;
+									//弹出游戏失败界面
+									playingMask.style.display = 'none';
+									overPage.style.display = 'block';
+									mask1.style.opacity = 1;
+									scores[1].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
+									scores[1].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
+								}
 								//清空敌机数组
 								presentEnemies = [];
 							}
