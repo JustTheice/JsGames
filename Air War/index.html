@@ -82,6 +82,8 @@
 			let overPage = mask1.querySelector('.over');
 			let rankPage = document.getElementsByClassName('rank')[0];
 			let playingMask = document.querySelector('#playing');
+			let scoreCount = playingMask.querySelector('p:nth-child(1)>span');
+			let lifeCount = playingMask.querySelector('p:nth-child(2)>span');
 			let startBtn = document.querySelector('.menu>a:nth-child(1)');
 			let rankBtn = menuPage.querySelector('.rank-btn');
 			let continueBtn = pausePage.querySelector('a:nth-child(1)');
@@ -149,6 +151,8 @@
 				gameData.isPlaying = true;
 				gameData.score = 0;
 				gameData.life = settings.selfLife;
+				scoreCount.innerHTML = gameData.score;
+				scoreCount.innerHTML = gameData.life;
 			};
 			
 			//排行榜
@@ -364,7 +368,7 @@
 								if(enemy.life <= 0){
 									presentEnemies.splice(index, 1);
 									gameData.score++;
-									playingMask.querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
+									scoreCount.innerHTML = gameData.score;
 									if(gameData.score > gameData.highestScore){
 										gameData.highestScore = gameData.score;
 									}
@@ -373,7 +377,7 @@
 							//判断敌机击中玩家
 							if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
 								gameData.life -= 50;
-								playingMask.querySelector('p:nth-child(2)>span').innerHTML = gameData.life;
+								lifeCount.innerHTML = gameData.life;
 								if(gameData.life <= 0){
 									clearGame();
 									gameData.isPlaying = false;
@@ -479,6 +483,8 @@
 				clearInterval(bulletTimer);
 				clearInterval(enemyTimer);
 			}
+			
+			
 		};
 	</script>
 </html>
