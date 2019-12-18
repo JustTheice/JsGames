@@ -13,7 +13,7 @@
 				<div class="menu">
 					<a href="javascript:;">开始游戏</a>
 					<a href="javascript:;" class="rank-btn">排行榜</a>
-					<a href="javascript:;">游戏设置</a>
+					<a href="javascript:;" class="set-btn">游戏设置</a>
 				</div>
 				<div class="pause">
 					<a href="javascript:;">继续游戏</a>
@@ -42,6 +42,16 @@
 						<h3>分数</h3>
 					</div>
 					<p>点击任意处返回菜单</p>
+				</div>
+				<div class="game-settings">
+					<div class="enemy-num">
+						<span>敌机数量</span><span>低</span>
+						<input type="range" id="range1" min="1" max="3"/>
+					</div>
+					<div class="life-num">
+						<span>生命值</span><span>中</span>
+						<input type="range" id="range2" min="1" max="3"/>
+					</div>
 				</div>
 			</div>
 			<div id="playing">
@@ -80,12 +90,14 @@
 			let menuPage = mask1.querySelector('.menu');
 			let pausePage = mask1.querySelector('.pause');
 			let overPage = mask1.querySelector('.over');
+			let settingsPage = mask1.querySelector('.game-settings');
 			let rankPage = document.getElementsByClassName('rank')[0];
 			let playingMask = document.querySelector('#playing');
 			let scoreCount = playingMask.querySelector('p:nth-child(1)>span');
 			let lifeCount = playingMask.querySelector('p:nth-child(2)>span');
 			let startBtn = document.querySelector('.menu>a:nth-child(1)');
 			let rankBtn = menuPage.querySelector('.rank-btn');
+			let setBtn = menuPage.querySelector('.set-btn');
 			let continueBtn = pausePage.querySelector('a:nth-child(1)');
 			let toMenuBtn = pausePage.querySelector('a:nth-child(2)');
 			let timer, bulletTimer, enemyTimer;
@@ -141,6 +153,7 @@
 				
 			}
 			
+			//菜单页
 			//开始游戏
 			startBtn.onclick = function(){
 				walk();
@@ -183,7 +196,11 @@
 				rankPage.appendChild(ul);
 			};
 			
-			
+			//设置
+			setBtn.onclick = function(){
+				menuPage.style.display = 'none';
+				settingsPage.style.display = 'block';
+			}
 			
 			//暂停界面
 			//按P暂停/继续游戏
@@ -287,6 +304,9 @@
 				// ctx.clearRect(0,0, canvas.offsetWidth,canvas.offsetHeight);
 				// // createPlane('self', {x, y});
 			};
+			
+			
+			
 			
 			/**
 			 * 		画一个战斗机
