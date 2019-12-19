@@ -14,7 +14,7 @@ body {
   background-position-y: 0;
 }
 #wrap .mask1 {
-  transition: 0.5s;
+  transition: .5s;
   background: rgba(0, 0, 0, 0.5);
   position: absolute;
   left: 50%;
@@ -36,7 +36,7 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: 0.3s;
+  transition: .3s;
 }
 #wrap .mask1 .menu a:hover {
   background: rgba(255, 255, 255, 0.5);
@@ -58,7 +58,7 @@ body {
   border: 2px solid;
   border-color: black;
   background: #ffffff;
-  transition: 0.3s;
+  transition: .3s;
 }
 #wrap .mask1 .pause a:hover {
   background: rgba(255, 255, 255, 0.5);
@@ -198,13 +198,73 @@ body {
   display: none;
   width: 100%;
   height: 100%;
-  padding: 20px;
+  padding-top: 100px;
 }
 #wrap .mask1 .game-settings div {
   margin: 0 auto;
   width: 250px;
   height: 100px;
-  font-size: 20px;
+}
+#wrap .mask1 .game-settings div h4 {
+  font-size: 25px;
+  color: whitesmoke;
+  text-shadow: 1px 1px yellow;
+}
+#wrap .mask1 .game-settings div h4:after {
+  display: block;
+  clear: both;
+  content: '';
+  height: 0;
+  visibility: hidden;
+}
+#wrap .mask1 .game-settings div h4 strong {
+  float: left;
+  font-weight: normal;
+}
+#wrap .mask1 .game-settings div h4 span {
+  font-weight: normal;
+  display: inline-block;
+  float: right;
+}
+#wrap .mask1 .game-settings div input[type=range] {
+  display: block;
+  transition: .5s;
+  margin-top: 5px;
+  width: 100%;
+  -webkit-appearance: none;
+  outline: none;
+  border-radius: 5px;
+  background: rgba(200, 200, 200, 0.8);
+}
+#wrap .mask1 .game-settings div input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 30px;
+  border-radius: 5px;
+  background: white;
+}
+#wrap .mask1 .game-settings a {
+  text-decoration: none;
+  text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  display: block;
+  color: black;
+  width: 200px;
+  margin: 30px auto;
+  border: 2px solid;
+  border-color: black;
+  background: #ffffff;
+  transition: .3s;
+  width: 80px;
+  height: 50px;
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#wrap .mask1 .game-settings a:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 #wrap #playing {
   width: 412px;
