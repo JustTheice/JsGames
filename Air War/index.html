@@ -111,7 +111,7 @@
 					range2 = document.querySelector('#range2');
 			let backMenu = document.querySelector('.backMenu');
 			let settingTexts = settingsPage.querySelectorAll('div span');
-			console.log(settingTexts)
+			
 			//动态设定canvas大小
 			canvas.width = canvas.height * 0.75;
 			
@@ -124,6 +124,12 @@
 			});
 			selfInfo.selfX = cW/2 - selfInfo.width/2;
 			selfInfo.selfY = cH - selfInfo.height;
+			let selfImg = new Image();
+			selfImg.src = selfInfo.imgSrc;
+			selfImg.onload = function(){
+				gameData.imgLoaded = true;
+			};
+			
 			
 			//获取历史最高分
 			var highestScore = 0;
@@ -149,10 +155,13 @@
 				isOver: true,
 				bgY: 0,
 				highestScore,
-				life: settings.selfLife
+				life: settings.selfLife,
+				imgLoaded: false,
+				bulletLv: 1
 			};
 			let bullets = []; //记录在场子弹
 			let presentEnemies = []; //记录在场敌军
+			let foodArr = []; //记录在场食物
 			
 			if(canvas.getContext){
 				var ctx = canvas.getContext('2d');
@@ -171,6 +180,7 @@
 				gameData.isOver = false;
 				gameData.isPlaying = true;
 				gameData.score = 0;
+				gameData.bulletLv = 1;
 				gameData.life = settings.selfLife;
 				scoreCount.innerHTML = gameData.score;
 				lifeCount.innerHTML = gameData.life;
@@ -346,12 +356,9 @@
 				});
 				//绘画
 				if(type == 'self'){
-					let img = new Image();
-					img.src = plane.imgSrc;
-					img.onload = function(){
-						ctx.drawImage(img, x,y, plane.width,plane.height);
-						cb && cb();
-					}
+					
+					ctx.drawImage(selfImg, x,y, plane.width,plane.height);
+					cb && cb();
 				}else{
 					ctx.fillStyle = plane.imgSrc;
 					ctx.fillRect(x,y, plane.width,plane.height);
@@ -365,16 +372,29 @@
 			 * 		开始游戏，逻辑函数
 			 */
 			function walk(){
+				if(!gameData.imgLoaded){
+					return;
+				}
+				
 				timer = setInterval(() => {
+					
+					
 					//清屏、重绘
 					ctx.clearRect(0,0, cW,cH);
-					createPlane('self', {x:selfInfo.selfX, y:selfInfo.selfY});
-					bullets.forEach((bullet,index) => {
-						createBullet(bullet);
+					//绘制食物
+					foodArr.forEach((food,index) => {
+						createFood(food)
 					});
+					//绘制敌机
 					presentEnemies.forEach((enemy, index) => {
 						createPlane(enemy.type, {x:enemy.x, y:enemy.y});
 					});
+					//绘制自己
+					createPlane('self', {x:selfInfo.selfX, y:selfInfo.selfY});
+					//绘制子弹
+					bullets.forEach((bullet,index) => {
+						createBullet(bullet);
+					});		
 					
 					
 					//更新敌机
@@ -392,6 +412,26 @@
 						if(enemy.y < 0-enemy.height || enemy.y > cH){
 							presentEnemies.splice(index, 1);
 						}
+						//判断敌机击中玩家
+						if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
+							gameData.life -= 50;
+							lifeCount.innerHTML = gameData.life;
+							if(gameData.life <= 0){
+								clearGame();
+								gameData.isPlaying = false;
+								gameData.isOver = true;
+								//弹出游戏失败界面
+								playingMask.style.display = 'none';
+								overPage.style.display = 'block';
+								mask1.style.opacity = 1;
+								foodArr = [];
+								scores[1].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
+								scores[1].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
+							}
+							//清空敌机数组
+							presentEnemies = [];
+							gameData.bulletLv = 1;
+						}
 					});
 					//更新子弹
 					bullets.forEach((bullet,index) => {
@@ -408,33 +448,60 @@
 								enemy.life -= bullet.ATR;
 								bullets.splice(bulletIndex, 1);
 								if(enemy.life <= 0){
+									//概率生成一个食物
+									if(Math.random() < 0.8){
+										
+										let food = new Food(Math.random()<0.8 ? 1 : 0);
+										food.x = enemy.x + enemy.width/2 - food.width/2;
+										food.y = enemy.y + enemy.height/2 - food.height/2;
+										food.moveX = Math.round(Math.random())===1 ? true : false;
+										food.moveY = Math.round(Math.random())===1 ? true : false;
+										foodArr.push(food);
+										setTimeout(() => {
+											foodArr.splice(foodArr.findIndex((item,index) => {
+												return item == food;
+											}),1);
+										}, 10000)
+									}
+									
 									presentEnemies.splice(index, 1);
 									gameData.score++;
 									scoreCount.innerHTML = gameData.score;
 									if(gameData.score > gameData.highestScore){
 										gameData.highestScore = gameData.score;
 									}
+									
 								}	
 							}
-							//判断敌机击中玩家
-							if((enemy.x+enemy.width>selfInfo.selfX && enemy.x<selfInfo.selfX+selfInfo.width) && (enemy.y+enemy.height>selfInfo.selfY && enemy.y<selfInfo.selfY+selfInfo.height)){
-								gameData.life -= 50;
-								lifeCount.innerHTML = gameData.life;
-								if(gameData.life <= 0){
-									clearGame();
-									gameData.isPlaying = false;
-									gameData.isOver = true;
-									//弹出游戏失败界面
-									playingMask.style.display = 'none';
-									overPage.style.display = 'block';
-									mask1.style.opacity = 1;
-									scores[1].querySelector('p:nth-child(1)>span').innerHTML = gameData.score;
-									scores[1].querySelector('p:nth-child(2)>span').innerHTML = gameData.highestScore;
-								}
-								//清空敌机数组
-								presentEnemies = [];
-							}
+							
 						});
+					});
+					
+					//更新食物
+					foodArr.forEach((food,index) => {
+						if(food.x<=0 || food.x+food.width>=cW){
+							food.moveX = !food.moveX;
+						}
+						if(food.y<=0 || food.y+food.height>=cH){
+							food.moveY = !food.moveY;
+						}
+						food.moveX ? food.x++ : food.x--;
+						food.moveY ? food.y+=2 : food.y--;
+						//判断吃食物
+						if((selfInfo.selfX+selfInfo.width>food.x && selfInfo.selfX<food.x+food.width) && (selfInfo.selfY+selfInfo.height>food.y && selfInfo.selfY<food.y+food.height)){
+							switch (food.type){
+								case 0:
+									gameData.life += 50;
+									lifeCount.innerHTML = gameData.life;
+									break;
+								case 1:
+									if(gameData.bulletLv<3){
+										gameData.bulletLv++;
+									}
+									break;
+							}
+							foodArr.splice(index,1);
+						}
 					});
 					
 					//背景滑动
@@ -446,7 +513,7 @@
 				}, 1000/60);
 				
 				bulletTimer = setInterval(() => {
-					bullets.push(new SelfBullet(1));
+					bullets.push(new SelfBullet(gameData.bulletLv));
 				}, 300);
 				
 				enemyTimer = setInterval(() => {
@@ -526,7 +593,41 @@
 				clearInterval(enemyTimer);
 			}
 			
-			
+			/**
+			 * 		食物 构造函数
+			 * 			参数：
+			 * 				type: 种类 //值 0生命 1升级
+			 */
+			function Food(type){
+				let color;
+				switch (type){
+					case 0:
+						color = 'red';
+						break;
+					case 1:
+						color = 'skyblue';
+						break;
+				}
+				
+				this.type = type;
+				this.color = color;
+				this.width = 30;
+				this.height = 30;
+				this.x = 0;
+				this.y = 0;
+				//X轴移动/Y轴移动，true自增，false自减
+				this.moveX = true;
+				this.moveY = true;
+			}
+			/**
+			 * 		食物 绘画
+			 */
+			function createFood(food){
+				ctx.save();
+				ctx.fillStyle = food.color;
+				ctx.fillRect(food.x,food.y, food.width,food.height);
+				ctx.restore();
+			}
 		};
 	</script>
 </html>
